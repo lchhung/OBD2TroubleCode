@@ -8,15 +8,16 @@ import CodeInput from './CodeInput';
 import *as firebase from 'firebase';
 import { YellowBox } from 'react-native';
 import _ from 'lodash';
+import PropTypes from 'prop-types';
 
 const config = {
-  apiKey: "AIzaSyBBpQAmwHyebPXt-ygGH18dD2BmoOQtL3c",
-  authDomain: "testdatatry.firebaseapp.com",
-  databaseURL: "https://testdatatry.firebaseio.com",
-  projectId: "testdatatry",
-  storageBucket: "testdatatry.appspot.com",
-  messagingSenderId: "3709907036",
-  appId: "1:3709907036:web:e8b2b0414893abab"
+  apiKey: "AIzaSyAi2a4MktZJl5d4yB9RVsh2d7hVLD5TDfs",
+  authDomain: "odb2codedata.firebaseapp.com",
+  databaseURL: "https://odb2codedata.firebaseio.com",
+  projectId: "odb2codedata",
+  storageBucket: "odb2codedata.appspot.com",
+  messagingSenderId: "202589990617",
+  appId: "1:202589990617:web:e825038884c9b608"
 };
 firebase.initializeApp(config);
 
@@ -34,7 +35,7 @@ class CodeDetails extends React.Component {
       title: 'Go back',
       headerTitleStyle: { 
         flex:1,
-        fontSize: 25,
+        fontSize: 18,
       },
     };
   };
@@ -44,68 +45,138 @@ class CodeDetails extends React.Component {
    
     //console.log({passedCarModel});
     this.state = {
-      
-      code: '',
-      codes: []
-    
+      enteredCode: '',
+      codeTitle: [],
+      causes:[],
+      possibleCauseText:'',
+      symptom:'',
+      symptomTitle: '',
+      desc:'',
+      descTitle:''
   }
   this.addItem = this.addItem.bind(this);
   }
 
   addItem () {
-    if (!this.state.code) return;
+    if (!this.state.enteredCode) return;
     const  passedCarModel= this.props.navigation.state.params.passedCarModel;
-    const codeData = passedCarModel + "/"+this.state.code;
-      // " Toyota navigated from the first screen"     
+
+    //Render code title
+    const codeTitleData = passedCarModel + "/"+this.state.enteredCode+"/CodeTitle";    
       firebase
       .database()
-      .ref(codeData)
+      .ref(codeTitleData)
       .orderByValue()
       .on("value", snapshot => {
         const data = snapshot.val()
         if (snapshot.val()) {
-          const getCode = [];
+          const getCodeTitle = [];
           Object
             .keys(data)
-            .forEach(code => getCode.push(data[code]));
+            .forEach(enteredCode => getCodeTitle.push(data[enteredCode]));
           this.setState({
-            codes: getCode
+            codeTitle: getCodeTitle,
           })
         }
       });
+
+
+    //Render possible causes
+    const causesData = passedCarModel + "/"+this.state.enteredCode+"/Causes";    
+      firebase
+      .database()
+      .ref(causesData)
+      .orderByValue()
+      .on("value", snapshot => {
+        const data = snapshot.val()
+        if (snapshot.val()) {
+          const getCauses = [];
+          Object
+            .keys(data)
+            .forEach(enteredCode => getCauses.push(data[enteredCode]));
+          this.setState({
+            causes: getCauses,
+            possibleCauseText: 'Possible Causes:'
+          })
+        }
+      });
+
+    //Render Symptom
+    const symptomData = passedCarModel + "/"+this.state.enteredCode+"/Symptom";    
+    firebase
+    .database()
+    .ref(symptomData)
+    .orderByValue()
+    .on("value", snapshot => {
+      const data = snapshot.val()
+      if (snapshot.val()) {
+        const getSymptom = [];
+        Object
+          .keys(data)
+          .forEach(enteredCode => getSymptom.push(data[enteredCode]));
+        this.setState({
+          symptom: getSymptom,
+          symptomTitle: 'Possible symptoms:'
+        })
+      }
+    });
+
+    //Render Description
+    const descData = passedCarModel + "/"+this.state.enteredCode+"/Desc";    
+    firebase
+    .database()
+    .ref(descData)
+    .orderByValue()
+    .on("value", snapshot => {
+      const data = snapshot.val()
+      if (snapshot.val()) {
+        const getDesc = [];
+        Object
+          .keys(data)
+          .forEach(enteredCode => getDesc.push(data[enteredCode]));
+        this.setState({
+          desc: getDesc,
+          descTitle: 'Description:'
+        })
+      }
+    });
   }
- // _keyExtractor = (item, index) => item.id;
-  
+
   render() {
     const  carModelLabel= this.props.navigation.state.params.passedCarModel;
-    //var passedCarModel= 10;
     return (
       <FindMainCard >
         <CodeEnterCard>
         <CodeInput
         label={carModelLabel}
-        value={this.state.code}
-        onChangeText={(text) => this.setState({code: text})}
+        value={this.state.enteredCode}
+        onChangeText={(text) => this.setState({enteredCode: text})}
         onPress={this.addItem}
         underlineColorAndroid ='black'
         />
         </CodeEnterCard>
         <ShowContentCard>
-            {/* <Text style= {styles.contentTextStyle}> 
-            {passedCarModel}
-            </Text> */}
-            
-            <FlatList data={this.state.codes}
-          renderItem={
+        <Spacer size={15} />
+        <Text style={styles.causeTextTitle}>{this.state.codeTitle}</Text>
+        <Spacer size={15} />
+        <Text style={styles.causeTextTitle}>{this.state.possibleCauseText}</Text>
+            <FlatList data={this.state.causes}
+            renderItem={
             ({item}) => 
             <View style={styles.listItemContainer}>
               <Text style={styles.listItem}>
                 {item}
               </Text>
-            </View>
-          }
+            </View>}
           keyExtractor={(index) => index.toString()}
           />
+           <Spacer size={15} />
+           <Text style={styles.causeTextTitle}>{this.state.symptomTitle}</Text>
+           <Text style={styles.listItem}>{this.state.symptom}</Text>
+           <Spacer size={15} />
+           <Text style={styles.causeTextTitle}>{this.state.descTitle}</Text>
+           <Text style={styles.listItem}>{this.state.desc}</Text>
+           <Spacer size={15} />
         </ShowContentCard>
       </FindMainCard>
       
@@ -118,15 +189,15 @@ const styles = StyleSheet.create({
   textInputStyle:{
     height:'50%',
     width: '80%',
-    fontSize: responsiveFontSize (3),
+    fontSize: 20,
     alignItems: 'center'
   },
   textTitleStyle:{
-    fontSize: responsiveFontSize(3),
+    fontSize: 20,
     color: 'black',
   },
   contentTextStyle:{
-    fontSize: responsiveFontSize(2),
+    fontSize: 18,
     color: 'black'
   },
   listItemContainer: {
@@ -135,8 +206,30 @@ const styles = StyleSheet.create({
     borderRadius: 5
   },
   listItem: {
-    fontSize: 25,
-    padding: 5,
+    fontSize: 18,
+    //padding: "5%",
     color: 'black',
+    right: '5%',
+    left:'5%',
+    marginRight: '10%'
+  },
+  causeTextTitle:{
+    fontSize: 18,
+    fontWeight: 'bold',
+    
+    color: 'blue',
+    marginRight: '10%',
+    marginLeft: '5%'
   }
 });
+const Spacer = ({ size }) => (
+  <View style={{ flex: 1, height: size }} />
+);
+
+Spacer.propTypes = {
+  size: PropTypes.number,
+};
+
+Spacer.defaultProps = {
+  size: 20,
+};
